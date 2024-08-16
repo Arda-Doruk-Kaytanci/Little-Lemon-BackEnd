@@ -8,63 +8,95 @@ from datetime import datetime
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+from datetime import date, datetime
 
 
 # Create your views here.
 def home(request):
-    return render(request, 'index.html')
+    return render(request, "index.html")
+
 
 def about(request):
-    return render(request, 'about.html')
+    return render(request, "about.html")
+
 
 def reservations(request):
-    date = request.GET.get('date',datetime.today().date())
+    date = request.GET.get("date", datetime.today().date())
     bookings = Booking.objects.all()
-    booking_json = serializers.serialize('json', bookings)
-    return render(request, 'bookings.html',{"bookings":booking_json})
+    booking_json = serializers.serialize("json", bookings)
+    return render(request, "bookings.html", {"bookings": booking_json})
+
+
+def get_hour_from_time(time_str):
+    time_obj = datetime.strptime(time_str, "%H:%M")
+    return time_obj.hour
+
 
 def book(request):
+    times = [
+        "08:00",
+        "09:00",
+        "10:00",
+        "11:00",
+        "12:00",
+        "13:00",
+        "14:00",
+        "15:00",
+        "16:00",
+        "17:00",
+        "18:00",
+        "19:00",
+        "20:00",
+    ]
     form = BookingForm()
-    if request.method == 'POST':
+    if request.method == "POST":
         form = BookingForm(request.POST)
         if form.is_valid():
             form.save()
-    context = {'form':form}
-    return render(request, 'book.html', context)
+    context = {
+        "form": form,
+        "date": date.today().strftime("%Y-%m-%d"),
+        "times": [(get_hour_from_time(time), time) for time in times],
+    }
+    return render(request, "book.html", context)
 
-# Add your code here to create new views
+
 def menu(request):
     menu_data = Menu.objects.all()
     main_data = {"menu": menu_data}
-    return render(request, 'menu.html', {"menu": main_data})
+    return render(request, "menu.html", {"menu": main_data})
 
 
-def display_menu_item(request, pk=None): 
-    if pk: 
-        menu_item = Menu.objects.get(pk=pk) 
-    else: 
-        menu_item = "" 
-    return render(request, 'menu_item.html', {"menu_item": menu_item}) 
+def display_menu_item(request, pk=None):
+    if pk:
+        menu_item = Menu.objects.get(pk=pk)
+    else:
+        menu_item = ""
+    return render(request, "menu_item.html", {"menu_item": menu_item})
+
 
 @csrf_exempt
 def bookings(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         data = json.load(request)
-        exist = Booking.objects.filter(reservation_date=data['reservation_date']).filter(
-            reservation_slot=data['reservation_slot']).exists()
-        if exist==False:
+        exist = (
+            Booking.objects.filter(reservation_date=data["reservation_date"])
+            .filter(reservation_slot=data["reservation_slot"])
+            .exists()
+        )
+        if exist == False:
             booking = Booking(
-                first_name=data['first_name'],
-                reservation_date=data['reservation_date'],
-                reservation_slot=data['reservation_slot'],
+                first_name=data["first_name"],
+                reservation_date=data["reservation_date"],
+                reservation_slot=data["reservation_slot"],
             )
             booking.save()
         else:
-            return HttpResponse("{'error':1}", content_type='application/json')
-    
-    date = request.GET.get('date',datetime.today().date())
+            return HttpResponse("{'error':1}", content_type="application/json")
+
+    date = request.GET.get("date", datetime.today().date())
 
     bookings = Booking.objects.all().filter(reservation_date=date)
-    booking_json = serializers.serialize('json', bookings)
+    booking_json = serializers.serialize("json", bookings)
 
-    return HttpResponse(booking_json, content_type='application/json')
+    return HttpResponse(booking_json, content_type="application/json")
