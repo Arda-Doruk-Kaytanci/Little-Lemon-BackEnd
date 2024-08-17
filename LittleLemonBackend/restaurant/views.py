@@ -1,13 +1,19 @@
 # from django.http import HttpResponse
 from django.shortcuts import render
+from django.contrib.auth import logout as auth_logout
 from .forms import BookingForm
 from .models import Menu
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
 from .models import Booking
+from django.core.exceptions import PermissionDenied
 from datetime import datetime
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth import authenticate, login
+from django.shortcuts import redirect, render
 from datetime import date, datetime
 
 
@@ -20,6 +26,14 @@ def about(request):
     return render(request, "about.html")
 
 
+def is_superuser(user):
+    if not user.is_superuser:
+        raise PermissionDenied
+    return True
+
+
+@user_passes_test(is_superuser)
+@login_required
 def reservations(request):
     date = request.GET.get("date", datetime.today().date())
     bookings = Booking.objects.all()
@@ -30,6 +44,23 @@ def reservations(request):
 def get_hour_from_time(time_str):
     time_obj = datetime.strptime(time_str, "%H:%M")
     return time_obj.hour
+
+
+@csrf_protect
+def user_login(request):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            response = redirect("home")
+            return response
+        else:
+            return render(request, "login.html", {"error": "Invalid credentials"})
+
+    return render(request, "login.html")
 
 
 def book(request):
@@ -100,3 +131,11 @@ def bookings(request):
     booking_json = serializers.serialize("json", bookings)
 
     return HttpResponse(booking_json, content_type="application/json")
+
+
+@login_required
+@csrf_protect
+def user_logout(request):
+    auth_logout(request)
+    response = redirect("login")
+    return response

@@ -9,5 +9,28 @@
     <li><a href="{% url 'menu' %}">Menu</a></li>
     <li><a href="{% url 'book' %}">Book</a></li>
     <li><a href="{% url 'reservations' %}">Reservations</a></li>
+    <li><a href="{% url 'login' %}">Log In</a></li>
+    <li>
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" id="logout">Logout</button>
+      </form>
+    </li>
   </ul>
 </nav>
+<style>
+  #logout {
+    color: #EDEFEE;
+    text-decoration: none;
+    background-color: transparent;
+    border: 0;
+    font-size: 1.5rem;
+    text-align: center;
+    padding-inline-start: 0rem;
+    margin-bottom: 0px;
+  }
+
+  #logout:hover {
+    text-decoration: underline;
+  }
+</style>
