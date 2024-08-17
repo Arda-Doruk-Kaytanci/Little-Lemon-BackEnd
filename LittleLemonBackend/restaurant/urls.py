@@ -18,4 +18,6 @@ urlpatterns = [
     path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("djoser.urls.jwt")),
     path("api/token-auth/", obtain_auth_token, name="token_auth"),
+    path('api/secret', views.SecretMessage.as_view(), name='secret'),
+
 ]

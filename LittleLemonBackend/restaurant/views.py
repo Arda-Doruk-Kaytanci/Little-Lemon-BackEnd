@@ -17,6 +17,10 @@ from django.views.decorators.csrf import csrf_protect
 from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect, render
 from datetime import date, datetime
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 
 # Create your views here.
@@ -156,3 +160,9 @@ class MenuView(generics.ListCreateAPIView):
 class BookView(generics.ListCreateAPIView):
     queryset = Booking.objects.all()
     serializer_class = BookingSerializer
+
+
+class SecretMessage(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        return Response({"message": "Wow You found the secret part congrats"}, status=status.HTTP_200_OK)
