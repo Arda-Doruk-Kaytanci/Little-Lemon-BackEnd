@@ -2,13 +2,15 @@
 from django.shortcuts import render
 from django.contrib.auth import logout as auth_logout
 from .forms import BookingForm
-from .models import Menu
+from .models import Menu, Booking
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core import serializers
 from .models import Booking
 from django.core.exceptions import PermissionDenied
 from datetime import datetime
 import json
+from .serializer import MenuSerializer, BookingSerializer
+from rest_framework import generics
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_protect
@@ -139,3 +141,18 @@ def user_logout(request):
     auth_logout(request)
     response = redirect("login")
     return response
+
+
+@user_passes_test(is_superuser)
+@login_required
+class MenuView(generics.ListCreateAPIView):
+    queryset = Menu.objects.all()
+    serializer_class = MenuSerializer
+    search_fields = ["name"]
+
+
+@user_passes_test(is_superuser)
+@login_required
+class BookView(generics.ListCreateAPIView):
+    queryset = Booking.objects.all()
+    serializer_class = BookingSerializer
